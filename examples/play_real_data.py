@@ -16,12 +16,12 @@ def main():
 
     # Get the data file path relative to the script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(
-        script_dir, "..", "data", "g1_stu_future_real_recordings_20250804_195137.json"
-    )
     # data_path = os.path.join(
-    #     script_dir, "..", "data", "g1_stu_future_real_recordings_20250805_213834.json"
+    #     script_dir, "..", "data", "g1_stu_future_real_recordings_20250804_195137.json"
     # )
+    data_path = os.path.join(
+        script_dir, "..", "data", "g1_stu_future_real_recordings_20250805_213834.json"
+    )
 
     motor_data = load_and_prepare(data_path)
 
@@ -45,8 +45,6 @@ def main():
             DirectionChangeSynthesizer(),  # Clicks when individual joints reverse
             TorqueDeltaSynthesizer(),  # Impacts for individual joint torque spikes
         ],
-        include_contact=False,
-        use_mixer=True,
     )
     sound_system.start()
 

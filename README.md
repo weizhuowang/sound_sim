@@ -4,12 +4,12 @@ Real-time sound synthesis for robot simulations (MuJoCo, Isaac Gym, etc.)
 
 ## Features
 
-- 🎵 **Real-time synthesis** at 44.1kHz without slowing down 50Hz simulations
-- 🤖 **Motor sounds** that respond to velocity AND torque
-- 📊 **Oscillation detection** - hear when your policy is jerky
-- 💥 **Impact sounds** for contacts (optional)
-- 🔧 **Modular synthesizers** - easy to extend and customize
-- 🎛️ **Simple API** - one line to add sound to any simulation
+- **Real-time synthesis** at 44.1kHz without slowing down 50Hz simulations
+- **Motor sounds** that respond to velocity AND torque
+- **Oscillation detection** - hear when your policy is jerky
+- **Impact sounds** for contacts (optional)
+- **Modular synthesizers** - easy to extend and customize
+- **Simple API** - one line to add sound to any simulation
 
 ## Installation
 
@@ -26,11 +26,26 @@ pip install -e ".[examples]"
 
 ## Quick Start
 
-### Simplest Usage
+### Minimal Usage
 
 ```python
 from sound_sim import step_with_sound
 import numpy as np
+from sound_sim import (
+    MujocoSoundSystem,
+    VelocitySynthesizer,
+    DirectionChangeSynthesizer,
+    TorqueDeltaSynthesizer,
+)
+
+sound_system = MujocoSoundSystem(
+    synthesizers=[
+        VelocitySynthesizer(),  # Each joint has its own frequency
+        DirectionChangeSynthesizer(),  # Clicks when individual joints reverse
+        TorqueDeltaSynthesizer(),  # Impacts for individual joint torque spikes
+    ],
+)
+sound_system.start()
 
 # In your simulation loop
 for t in range(steps):
@@ -38,7 +53,7 @@ for t in range(steps):
     motor_tau = np.array([...])  # Your motor torques
     
     # Just one line!
-    step_with_sound(motor_vel=motor_vel, motor_tau=motor_tau)
+    sound_system.step(motor_vel=vel, motor_tau=tau)
 ```
 
 ### With MuJoCo
