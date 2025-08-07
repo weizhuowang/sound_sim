@@ -20,6 +20,7 @@ from sound_sim.synthesizers import (
     VelocitySynthesizer,
     DirectionChangeSynthesizer,
     TorqueDeltaSynthesizer,
+    FootStompSynthesizer,
 )
 
 __version__ = "0.1.0"
@@ -42,4 +43,5 @@ __all__ = [
     "VelocitySynthesizer",
     "DirectionChangeSynthesizer",
     "TorqueDeltaSynthesizer",
+    "FootStompSynthesizer",
 ]

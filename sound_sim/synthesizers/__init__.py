@@ -4,6 +4,7 @@ from sound_sim.synthesizers.per_joint import (
     VelocitySynthesizer,
     DirectionChangeSynthesizer,
     TorqueDeltaSynthesizer,
+    FootStompSynthesizer,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "VelocitySynthesizer",
     "DirectionChangeSynthesizer",
     "TorqueDeltaSynthesizer",
+    "FootStompSynthesizer",
 ]

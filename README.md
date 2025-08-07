@@ -53,7 +53,9 @@ for t in range(steps):
     motor_tau = np.array([...])  # Your motor torques
     
     # Just one line!
-    sound_system.step(motor_vel=vel, motor_tau=tau)
+    sound_system.step(motor_vel=vel, motor_tau=tau, qfrc_actuator=qfrc_actuator)
+
+sound_system.stop()
 ```
 
 ### With MuJoCo

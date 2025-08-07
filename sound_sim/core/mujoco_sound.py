@@ -67,7 +67,7 @@ class MujocoSoundSystem:
 
         return state
 
-    def step(self, data=None, motor_vel=None, motor_tau=None, contact_force=None):
+    def step(self, data=None, motor_vel=None, motor_tau=None, contact_force=None, qfrc=None):
         """Step the sound system with state data.
 
         Option 1: Pass MuJoCo data object
@@ -89,6 +89,8 @@ class MujocoSoundSystem:
                 state["motor_tau"] = motor_tau
             if contact_force is not None and self.include_contact:
                 state["contact_force"] = contact_force
+            if qfrc is not None:
+                state["qfrc"] = qfrc
 
         if self.use_mixer:
             # Collect all audio and let mixer handle overlaps

@@ -104,7 +104,7 @@ class VelocitySynthesizer(PerJointSynthesizer):
         frequency = np.clip(frequency, 50, 20000)
 
         # Amplitude based on velocity magnitude
-        amplitude = np.tanh(np.abs(vel) * 2) * 0.01
+        amplitude = np.tanh(np.abs(vel) * 2) * 0.04
 
         # Generate sine wave with phase continuity using time-based approach
         # Calculate phase based on total samples elapsed
@@ -214,5 +214,75 @@ class TorqueDeltaSynthesizer(PerJointSynthesizer):
 
             # Return the full click sound - mixer will handle overlapping
             return click * intensity  # Reduce click volume
+
+        return output
+
+
+class FootStompSynthesizer(PerJointSynthesizer):
+    """Generates stomp sounds when feet contact the ground with force."""
+
+    def __init__(
+        self, sample_rate: int = 44100, buffer_size: int = 882, max_joints: int = 30
+    ):
+        super().__init__(sample_rate, buffer_size, max_joints)
+        self.force_threshold = 10.0  # Minimum force to trigger stomp
+        self.prev_force = None
+
+    def synthesize(self, state: Dict[str, Any]) -> np.ndarray:
+        # Look for qfrc in state (ground reaction forces)
+        qfrc = state.get("qfrc", np.array([]))
+
+        if len(qfrc) == 0:
+            return np.zeros(self.buffer_size)
+
+        # Initialize previous force if needed
+        if self.prev_force is None:
+            self.prev_force = np.zeros_like(qfrc)
+
+        num_joints = min(len(qfrc), self.max_joints)
+        output = np.zeros(self.buffer_size)
+
+        # Process each joint/contact point
+        for i in range(num_joints):
+            force_i = qfrc[i]
+            prev_force_i = self.prev_force[i] if i < len(self.prev_force) else 0
+
+            # Detect new impact (force crosses threshold from below)
+            if force_i > self.force_threshold and prev_force_i <= self.force_threshold:
+                # Stomp intensity based on force magnitude
+                intensity = np.clip(force_i / 100.0, 0, 2.0)
+
+                # Low frequency stomp (50-150 Hz)
+                stomp_freq = 20 + (1.0 - i / self.max_joints) * 0
+
+                # Stomp sound (80ms with resonance)
+                t = np.linspace(0, 0.6, int(0.6 * self.sample_rate))
+
+                # Deep thud with some harmonics
+                stomp = (
+                    np.sin(2 * np.pi * stomp_freq * t) * 0.5  # Fundamental
+                    + np.sin(2 * np.pi * stomp_freq * 2 * t) * 0.2  # 2nd harmonic
+                    + np.sin(2 * np.pi * stomp_freq * 3 * t) * 0.1  # 3rd harmonic
+                )
+
+                # Fast attack, slower decay for impact feel
+                envelope = np.exp(-t * 20)
+
+                # Add some low-freq noise for texture
+                noise = np.random.randn(len(t)) * 0.2
+                noise = np.convolve(
+                    noise, np.ones(15) / 15, mode="same"
+                )  # Low-pass filter
+
+                stomp = (stomp + noise) * envelope * intensity
+
+                # Handle sounds longer than buffer
+                if len(stomp) > len(output):
+                    output = np.pad(output, (0, len(stomp) - len(output)))
+
+                output[: len(stomp)] += stomp
+
+        # Update previous force
+        self.prev_force = qfrc.copy()
 
         return output
