@@ -58,13 +58,13 @@ while running:
 ### Advanced Control
 
 ```python
-from sound_sim import MujocoSoundSystem, JointSynthesizer, TorqueSynthesizer
+from sound_sim import MujocoSoundSystem, VelocitySynthesizer, DirectionChangeSynthesizer
 
-# Custom sound system
+# Per-joint sound system (hear individual motors)
 sound = MujocoSoundSystem(
     synthesizers=[
-        JointSynthesizer(),      # Motor sounds
-        TorqueSynthesizer(),      # Torque/strain sounds
+        VelocitySynthesizer(),       # Each joint gets own frequency
+        DirectionChangeSynthesizer(), # Clicks on direction changes
     ],
     include_contact=False
 )
@@ -91,21 +91,22 @@ for t in range(len(motor_data['motor_vel'])):
     )
 ```
 
-## Sound Components
+## Sound Components (Per-Joint Only)
 
-### Synthesizers
+All synthesizers process each joint individually - no averaging!
 
-- **JointSynthesizer**: Motor whirring, pitch varies with velocity and torque
-- **TorqueSynthesizer**: Strain sounds, rumbles, metallic stress
-- **OscillationSynthesizer**: Clicks and buzzes for jerky movements
-- **ContactSynthesizer**: Impact thuds (optional)
+### Available Synthesizers
+
+- **VelocitySynthesizer**: Each joint gets its own frequency based on velocity
+- **DirectionChangeSynthesizer**: Clicks when individual joints change direction  
+- **TorqueDeltaSynthesizer**: Impacts when individual joints have torque spikes
 
 ### What You'll Hear
 
-- **Smooth motion** → Steady motor hum
-- **High torque** → Deeper pitch + strain harmonics
-- **Oscillations** → Clicks and buzzing
-- **Impacts** → Thuds (if contact enabled)
+- **Multiple tones** - One frequency per joint (not a single averaged tone)
+- **Individual clicks** - Can identify which specific joint is reversing
+- **Isolated impacts** - Torque spikes on specific joints are audible
+- **Rich soundscape** - Complex but informative, helps identify problematic joints
 
 ## Examples
 

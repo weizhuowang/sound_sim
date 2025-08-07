@@ -52,5 +52,9 @@ class SoundEngine:
             normalized = np.clip(audio_data, -1.0, 1.0)
             self.audio_queue.put(normalized)
     
+    def get_queue_size(self) -> int:
+        """Get the current number of buffers in the queue."""
+        return self.audio_queue.qsize()
+    
     def __del__(self):
         self.stop()

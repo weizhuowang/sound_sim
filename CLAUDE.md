@@ -28,14 +28,38 @@ Required inputs:
 sound_sim/
 ├── core/
 │   ├── sound_engine.py      # PyAudio streaming engine
+│   ├── audio_mixer.py       # Handles overlapping sounds
 │   ├── mujoco_sound.py      # Main interface & mixing
 │   └── utils.py              # Data loading & processing
 ├── synthesizers/
-│   ├── base.py               # Base class + basic synthesizers
-│   └── torque_synthesizer.py # Specialized torque sounds
+│   ├── base.py               # Base Synthesizer class only
+│   └── per_joint.py          # All per-joint synthesizers
 └── examples/
     └── ...                   # Usage examples
 ```
+
+## Design Philosophy (User Preferences)
+
+### Per-Joint Only
+- **NO averaging** - Each joint is processed individually
+- **Simple components** - Each synthesizer does ONE thing
+- **Modular** - Easy to combine different synthesizers
+- **Keep it simple** - Avoid complex hybrid synthesizers
+
+### Current Synthesizers
+- `VelocitySynthesizer`: Joint velocity → frequency (one tone per joint)
+- `DirectionChangeSynthesizer`: Sign changes → clicks
+- `TorqueDeltaSynthesizer`: Torque changes → impacts
+
+### User's Coding Practices & Preferences
+- **Simplicity first** - Avoid over-engineering, keep components simple
+- **Modular design** - Small, composable pieces rather than monolithic systems  
+- **No unnecessary files** - Don't create excessive examples or test files
+- **Clear separation** - Each component should do ONE thing well
+- **Start from scratch when needed** - Build exactly what's needed, not what might be needed
+- **Per-joint focus** - Want to hear individual joint behaviors, not averaged signals
+- **Avoid hybrids** - Don't mix concepts in a single synthesizer
+- **Documentation in code** - Update CLAUDE.md and README.md with design decisions
 
 ## Testing Commands
 

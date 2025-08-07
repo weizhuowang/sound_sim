@@ -12,9 +12,18 @@ import matplotlib.pyplot as plt
 def main():
     # Load your real data
     print("Loading real robot data...")
-    motor_data = load_and_prepare(
-        "data/g1_stu_future_real_recordings_20250804_195137.json"
+    import os
+
+    # Get the data file path relative to the script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(
+        script_dir, "..", "data", "g1_stu_future_real_recordings_20250804_195137.json"
     )
+    # data_path = os.path.join(
+    #     script_dir, "..", "data", "g1_stu_future_real_recordings_20250805_213834.json"
+    # )
+
+    motor_data = load_and_prepare(data_path)
 
     motor_vel = motor_data["motor_vel"]  # (35705, 29)
     motor_tau = motor_data["motor_tau"]  # (35705, 29)
@@ -22,16 +31,22 @@ def main():
     print(f"Loaded {motor_vel.shape[0]} timesteps with {motor_vel.shape[1]} motors")
     print(f"Duration: {motor_vel.shape[0] * 0.02:.1f} seconds at 50Hz")
 
-    # Initialize sound system with enhanced torque sounds
-    from sound_sim import JointSynthesizer, OscillationSynthesizer, TorqueSynthesizer
-    
+    # Initialize sound system with per-joint synthesizers
+    from sound_sim import (
+        MujocoSoundSystem,
+        VelocitySynthesizer,
+        DirectionChangeSynthesizer,
+        TorqueDeltaSynthesizer,
+    )
+
     sound_system = MujocoSoundSystem(
         synthesizers=[
-            JointSynthesizer(),      # Motor sounds (vel + tau effects)
-            TorqueSynthesizer(),      # Dedicated torque/strain sounds
-            OscillationSynthesizer(), # Oscillation detection
+            VelocitySynthesizer(),  # Each joint has its own frequency
+            DirectionChangeSynthesizer(),  # Clicks when individual joints reverse
+            TorqueDeltaSynthesizer(),  # Impacts for individual joint torque spikes
         ],
-        include_contact=False
+        include_contact=False,
+        use_mixer=True,
     )
     sound_system.start()
 
@@ -40,7 +55,7 @@ def main():
 
     try:
         # Play through the data
-        for t in tqdm(range(3000, min(6000, len(motor_vel)))):  # First 20 seconds
+        for t in tqdm(range(2600, min(6000, len(motor_vel)))):  # First 20 seconds
             t1 = time.time()
             # Get current timestep data
             vel = motor_vel[t]
@@ -57,7 +72,7 @@ def main():
 
             t2 = time.time()
             # Precise sleep to match original data rate (50Hz)
-            time.sleep(0.02 - (t2 - t1) - 0.0032)
+            time.sleep(max(0.0, 0.02 - (t2 - t1) - 0.0030))
 
     except KeyboardInterrupt:
         print("\nStopped by user")

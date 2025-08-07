@@ -4,6 +4,7 @@ Sound Sim - Real-time sound synthesis for robot simulations
 
 from sound_sim.core.mujoco_sound import MujocoSoundSystem, step_with_sound
 from sound_sim.core.sound_engine import SoundEngine
+from sound_sim.core.audio_mixer import AudioMixer, OverlapBuffer
 from sound_sim.core.utils import (
     load_json_data,
     timeseries_to_arrays,
@@ -13,13 +14,13 @@ from sound_sim.core.utils import (
     inspect_data,
 )
 
-from sound_sim.synthesizers.base import (
+from sound_sim.synthesizers import (
     Synthesizer,
-    JointSynthesizer,
-    OscillationSynthesizer,
-    ContactSynthesizer,
+    PerJointSynthesizer,
+    VelocitySynthesizer,
+    DirectionChangeSynthesizer,
+    TorqueDeltaSynthesizer,
 )
-from sound_sim.synthesizers.torque_synthesizer import TorqueSynthesizer
 
 __version__ = "0.1.0"
 
@@ -37,8 +38,8 @@ __all__ = [
     "inspect_data",
     # Synthesizers
     "Synthesizer",
-    "JointSynthesizer",
-    "OscillationSynthesizer",
-    "ContactSynthesizer",
-    "TorqueSynthesizer",
+    "PerJointSynthesizer",
+    "VelocitySynthesizer",
+    "DirectionChangeSynthesizer",
+    "TorqueDeltaSynthesizer",
 ]

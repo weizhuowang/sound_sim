@@ -1,7 +1,8 @@
 import numpy as np
 from typing import Optional, List, Dict, Any
 from sound_sim.core.sound_engine import SoundEngine
-from sound_sim.synthesizers.base import Synthesizer, JointSynthesizer, OscillationSynthesizer, ContactSynthesizer
+from sound_sim.core.audio_mixer import AudioMixer
+from sound_sim.synthesizers import Synthesizer, VelocitySynthesizer, DirectionChangeSynthesizer, TorqueDeltaSynthesizer
 
 
 class MujocoSoundSystem:
@@ -10,20 +11,26 @@ class MujocoSoundSystem:
         sample_rate: int = 44100,
         buffer_size: int = 882,
         synthesizers: Optional[List[Synthesizer]] = None,
-        include_contact: bool = True
+        include_contact: bool = True,
+        use_mixer: bool = True
     ):
         self.engine = SoundEngine(sample_rate, buffer_size)
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
         self.include_contact = include_contact
+        self.use_mixer = use_mixer
+        
+        # Audio mixer for handling overlapping sounds
+        if use_mixer:
+            self.mixer = AudioMixer(sample_rate, buffer_size, max_overlap_buffers=5)
         
         if synthesizers is None:
+            # Default to per-joint synthesizers
             self.synthesizers = [
-                JointSynthesizer(sample_rate, buffer_size),
-                OscillationSynthesizer(sample_rate, buffer_size)
+                VelocitySynthesizer(sample_rate, buffer_size),
+                DirectionChangeSynthesizer(sample_rate, buffer_size),
+                TorqueDeltaSynthesizer(sample_rate, buffer_size)
             ]
-            if include_contact:
-                self.synthesizers.append(ContactSynthesizer(sample_rate, buffer_size))
         else:
             self.synthesizers = synthesizers
         
@@ -78,16 +85,44 @@ class MujocoSoundSystem:
             if contact_force is not None and self.include_contact:
                 state['contact_force'] = contact_force
         
-        mixed_audio = np.zeros(self.buffer_size)
-        for synth in self.synthesizers:
-            if isinstance(synth, ContactSynthesizer) and 'contact_force' not in state:
-                continue
-            audio = synth.synthesize(state)
-            mixed_audio += audio
+        if self.use_mixer:
+            # Collect all audio and let mixer handle overlaps
+            total_audio = np.zeros(self.buffer_size * 5)  # Allow for longer sounds
+            
+            for synth in self.synthesizers:
+                audio = synth.synthesize(state)
+                
+                # Add to total (may be longer than buffer_size for transients)
+                if len(audio) <= len(total_audio):
+                    total_audio[:len(audio)] += audio
+                else:
+                    total_audio += audio[:len(total_audio)]
+            
+            # Let mixer handle the overlapping and return current buffer
+            mixed_audio = self.mixer.add_sound(total_audio, extend_duration=True)
+            mixed_audio = mixed_audio * self.volume
+        else:
+            # Simple mixing without overlap handling
+            mixed_audio = np.zeros(self.buffer_size)
+            for synth in self.synthesizers:
+                audio = synth.synthesize(state)
+                # Truncate to buffer size
+                if len(audio) > self.buffer_size:
+                    audio = audio[:self.buffer_size]
+                elif len(audio) < self.buffer_size:
+                    audio = np.pad(audio, (0, self.buffer_size - len(audio)))
+                mixed_audio += audio
+            mixed_audio = np.clip(mixed_audio * self.volume, -1.0, 1.0)
         
-        mixed_audio = np.clip(mixed_audio * self.volume, -1.0, 1.0)
-        
+        # Send buffer to engine
         self.engine.play(mixed_audio)
+        
+        # Generate and queue an extra buffer if queue is getting low
+        # This prevents gaps due to timing variations
+        if self.engine.get_queue_size() < 2:
+            # Queue is running low, add another buffer of the same audio
+            # This adds ~20ms of latency but ensures smooth playback
+            self.engine.play(mixed_audio)
     
     def set_volume(self, volume: float):
         self.volume = np.clip(volume, 0.0, 1.0)
