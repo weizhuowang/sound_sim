@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="sound-sim",
-    version="0.1.0",
+    version="0.2.0",
     author="Weizhuo(Ken) Wang",
     description="Real-time sound synthesis for robot simulations",
     long_description=long_description,

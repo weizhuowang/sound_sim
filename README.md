@@ -12,6 +12,9 @@ Real-time sound synthesis for robot simulations (MuJoCo, Isaac Gym, etc.)
 - **Modular synthesizers** - easy to extend and customize
 - **Simple API** - one line to add sound to any simulation
 
+## Release
+[V0.2.0] Added foot stomp sounds, fixed multiple bugs, tuned sounds to be more realistic.
+
 ## Installation
 
 ```bash
@@ -62,19 +65,6 @@ for t in range(steps):
 sound_system.stop()
 ```
 
-### With MuJoCo
-
-```python
-import mujoco
-from sound_sim import step_with_sound
-
-model = mujoco.MjModel.from_xml_string(xml)
-data = mujoco.MjData(model)
-
-while running:
-    mujoco.mj_step(model, data)
-    step_with_sound(data)  # Automatically extracts motor data
-```
 
 ### Advanced Control
 
@@ -186,6 +176,11 @@ class MySynthesizer(Synthesizer):
 - PyAudio >= 0.2.11
 - SciPy >= 1.10.0
 - MuJoCo >= 3.0.0 (optional)
+
+## Future Plans
+- Support direct sound replay (from recording, not synthesized)
+- Seperate sound synthesis to it's own class
+- Support variable dt (currently 50Hz)
 
 ## License
 
