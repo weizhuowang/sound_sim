@@ -104,7 +104,7 @@ class VelocitySynthesizer(PerJointSynthesizer):
         frequency = np.clip(frequency, 50, 20000)
 
         # Amplitude based on velocity magnitude
-        amplitude = np.tanh(np.abs(vel) * 2) * 0.04
+        amplitude = np.tanh(np.abs(vel) * 2) * 0.01
 
         # Generate sine wave with phase continuity using time-based approach
         # Calculate phase based on total samples elapsed
@@ -147,7 +147,7 @@ class DirectionChangeSynthesizer(PerJointSynthesizer):
             and np.sign(vel) != np.sign(prev_vel)
         ):
             # Impact intensity based on torque change magnitude
-            intensity = np.abs(vel - prev_vel) / 5
+            intensity = np.abs(vel - prev_vel) / 40
 
             # Lower frequency for larger joints (assumed by index)
             impact_freq = 1000 + (1.0 - joint_idx / self.max_joints) * 40
@@ -187,7 +187,7 @@ class TorqueDeltaSynthesizer(PerJointSynthesizer):
         if tau_delta > self.delta_threshold:
             # Click intensity based on velocity magnitude (capped)
             # print(np.abs(vel - prev_vel))
-            intensity = np.clip((tau_delta / 20) ** 3, 0, 1.0) * 0.8
+            intensity = np.clip((tau_delta / 80) ** 1.5, 0, 1.0) * 2
 
             # Vary frequency slightly per joint for natural variation
             click_freq = 25 + joint_idx * 1
@@ -208,6 +208,7 @@ class TorqueDeltaSynthesizer(PerJointSynthesizer):
 
             # Add some broadband noise for texture
             noise = np.random.randn(len(t)) * 0.9
+            noise = np.convolve(noise, np.ones(10) / 10, mode="same")  # Low-pass filter
 
             # Combine with envelope
             click = (click + noise) * envelope
@@ -225,7 +226,7 @@ class FootStompSynthesizer(PerJointSynthesizer):
         self, sample_rate: int = 44100, buffer_size: int = 882, max_joints: int = 30
     ):
         super().__init__(sample_rate, buffer_size, max_joints)
-        self.force_threshold = 10.0  # Minimum force to trigger stomp
+        self.force_threshold = 15.0  # Minimum force to trigger stomp
         self.prev_force = None
 
     def synthesize(self, state: Dict[str, Any]) -> np.ndarray:

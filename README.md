@@ -7,6 +7,7 @@ Real-time sound synthesis for robot simulations (MuJoCo, Isaac Gym, etc.)
 - **Real-time synthesis** at 44.1kHz without slowing down 50Hz simulations
 - **Motor sounds** that respond to velocity AND torque
 - **Oscillation detection** - hear when your policy is jerky
+- **Foot stomps** - ground contact sounds based on force peaks
 - **Impact sounds** for contacts (optional)
 - **Modular synthesizers** - easy to extend and customize
 - **Simple API** - one line to add sound to any simulation
@@ -36,6 +37,7 @@ from sound_sim import (
     VelocitySynthesizer,
     DirectionChangeSynthesizer,
     TorqueDeltaSynthesizer,
+    FootStompSynthesizer,
 )
 
 sound_system = MujocoSoundSystem(
@@ -43,6 +45,7 @@ sound_system = MujocoSoundSystem(
         VelocitySynthesizer(),  # Each joint has its own frequency
         DirectionChangeSynthesizer(),  # Clicks when individual joints reverse
         TorqueDeltaSynthesizer(),  # Impacts for individual joint torque spikes
+        FootStompSynthesizer(),  # Stomps when feet contact ground
     ],
 )
 sound_system.start()
@@ -51,9 +54,10 @@ sound_system.start()
 for t in range(steps):
     motor_vel = np.array([...])  # Your motor velocities
     motor_tau = np.array([...])  # Your motor torques
+    qfrc = np.array([...])  # Ground reaction forces (optional)
     
     # Just one line!
-    sound_system.step(motor_vel=vel, motor_tau=tau, qfrc_actuator=qfrc_actuator)
+    sound_system.step(motor_vel=vel, motor_tau=tau, qfrc=qfrc)
 
 sound_system.stop()
 ```
@@ -117,12 +121,14 @@ All synthesizers process each joint individually - no averaging!
 - **VelocitySynthesizer**: Each joint gets its own frequency based on velocity
 - **DirectionChangeSynthesizer**: Clicks when individual joints change direction  
 - **TorqueDeltaSynthesizer**: Impacts when individual joints have torque spikes
+- **FootStompSynthesizer**: Deep stomps when ground reaction forces peak (walking/landing)
 
 ### What You'll Hear
 
 - **Multiple tones** - One frequency per joint (not a single averaged tone)
 - **Individual clicks** - Can identify which specific joint is reversing
 - **Isolated impacts** - Torque spikes on specific joints are audible
+- **Foot stomps** - Deep thumps when feet contact ground (only on force peaks, not sustained contact)
 - **Rich soundscape** - Complex but informative, helps identify problematic joints
 
 ## Examples
@@ -136,6 +142,9 @@ python examples/test_torque_effect.py
 
 # Play real robot data
 python examples/play_real_data.py
+
+# Test foot stomp sounds
+python test_stomp.py
 
 # MuJoCo humanoid (macOS: use mjpython)
 python examples/example_humanoid.py
@@ -161,7 +170,7 @@ class MySynthesizer(Synthesizer):
 
 ### Core Functions
 
-- `step_with_sound(data=None, motor_vel=None, motor_tau=None, contact_force=None)`
+- `step_with_sound(data=None, motor_vel=None, motor_tau=None, qfrc=None)`
 - `MujocoSoundSystem(sample_rate=44100, buffer_size=882, synthesizers=None, include_contact=True)`
 
 ### Data Utils

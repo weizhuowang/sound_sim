@@ -25,7 +25,7 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "numpy>=1.24.0",
+        "numpy==1.23.0",
         "pyaudio>=0.2.11",
         "scipy>=1.10.0",
     ],

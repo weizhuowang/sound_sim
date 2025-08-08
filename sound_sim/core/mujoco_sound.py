@@ -67,14 +67,14 @@ class MujocoSoundSystem:
 
         return state
 
-    def step(self, data=None, motor_vel=None, motor_tau=None, contact_force=None, qfrc=None):
+    def step(self, data=None, motor_vel=None, motor_tau=None, qfrc=None):
         """Step the sound system with state data.
 
         Option 1: Pass MuJoCo data object
             step(data)
 
         Option 2: Pass arrays directly
-            step(motor_vel=vel_array, motor_tau=tau_array, contact_force=force_array)
+            step(motor_vel=vel_array, motor_tau=tau_array, qfrc=qfrc_array)
         """
         if not self.enabled:
             return
@@ -87,8 +87,6 @@ class MujocoSoundSystem:
                 state["motor_vel"] = motor_vel
             if motor_tau is not None:
                 state["motor_tau"] = motor_tau
-            if contact_force is not None and self.include_contact:
-                state["contact_force"] = contact_force
             if qfrc is not None:
                 state["qfrc"] = qfrc
 
@@ -155,7 +153,7 @@ def step_with_sound(
     data=None,
     motor_vel=None,
     motor_tau=None,
-    contact_force=None,
+    qfrc=None,
     sound_system: Optional[MujocoSoundSystem] = None,
 ):
     """Simple interface to add sound to any simulation.
@@ -170,9 +168,9 @@ def step_with_sound(
 
     if sound_system is None:
         if "_default_sound_system" not in globals():
-            include_contact = contact_force is not None or data is not None
+            include_contact = data is not None
             _default_sound_system = MujocoSoundSystem(include_contact=include_contact)
             _default_sound_system.start()
         sound_system = _default_sound_system
 
-    sound_system.step(data, motor_vel, motor_tau, contact_force)
+    sound_system.step(data, motor_vel, motor_tau, qfrc)
