@@ -18,6 +18,9 @@ Real-time sound synthesis for robot simulations (MuJoCo, Isaac Gym, etc.)
 ## Installation
 
 ```bash
+# Install apt requirements if on ubuntu, not needed for MacOS
+sudo apt-get install portaudio19-dev python3-pyaudio
+
 # Install as editable package
 pip install -e .
 
